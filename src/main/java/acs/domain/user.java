@@ -1,4 +1,4 @@
-package main.java.acs.domain;
+package acs.domain;
 
 public class user {
     
