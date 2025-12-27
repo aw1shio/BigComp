@@ -12,7 +12,7 @@ import java.time.Instant;
  * 2. 访问哪个 Resource（resourceId）
  * 3. 在什么时间发生（timestamp）
  *
- * ⚠️ 注意：
+ * 
  * - 这是一个纯 DTO（Data Transfer Object）
  * - 不包含任何业务逻辑
  */
