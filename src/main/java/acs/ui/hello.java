@@ -2,6 +2,6 @@ package acs.ui;
 
 public class hello {
     static {
-        System.out.println("Hello, ACS UI!");
+        System.out.println("Hello,world！");
     }
 }
