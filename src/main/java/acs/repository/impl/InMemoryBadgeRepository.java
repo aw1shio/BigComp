@@ -3,9 +3,10 @@ package acs.repository.impl;
 import acs.domain.Badge;
 import acs.repository.BadgeRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.Optional;
+import java.util.Map;
+import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.Optional;
 
 /**
  * 线程安全的内存版 BadgeRepository。
@@ -33,5 +34,15 @@ public class InMemoryBadgeRepository implements BadgeRepository {
             return;
         }
         store.put(badge.getId(), badge);
+    }
+
+    private final Map<String, Instant> expirations = new ConcurrentHashMap<>();
+
+    public void setExpiration(String badgeId, Instant expiration) {
+        expirations.put(badgeId, expiration);
+    }
+
+    public Optional<Instant> getExpiration(String badgeId) {
+        return Optional.ofNullable(expirations.get(badgeId));
     }
 }

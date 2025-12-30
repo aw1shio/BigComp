@@ -113,7 +113,12 @@ public class AccessControlServiceImpl implements AccessControlService {
                 reasonCode = ReasonCode.RESOURCE_OCCUPIED; // 离线状态视为不可访问
                 return buildResultAndLog(request, decision, reasonCode, employeeId, "资源离线不可用");
             }
-
+            
+            if (!resourceRepository.tryOccupy(resourceId)) {
+                reasonCode = ReasonCode.RESOURCE_OCCUPIED;
+                return buildResultAndLog(request, decision, reasonCode, employeeId, "资源当前被占用");
+            }
+            
             // 7. 检查员工所属组是否有资源访问权限
             Set<String> groupIds = employee.getGroupIds();
             boolean hasPermission = false;

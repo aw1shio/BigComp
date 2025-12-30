@@ -1,6 +1,7 @@
 package acs.repository.impl;
 
 import acs.domain.Resource;
+import acs.domain.ResourceState;
 import acs.repository.ResourceRepository;
 import org.springframework.stereotype.Repository;
 
@@ -27,4 +28,21 @@ public class InMemoryResourceRepository implements ResourceRepository {
         }
         store.put(resource.getId(), resource);
     }
+
+    @Override
+    public boolean tryOccupy(String resourceId) {
+    Resource resource = store.get(resourceId);
+    if (resource == null) {
+        return false;
+    }
+
+    synchronized (resource) {
+        if (resource.getState() == ResourceState.AVAILABLE) {
+            resource.setState(ResourceState.OCCUPIED);
+            return true;
+        }
+        return false;
+    }
+}
+
 }

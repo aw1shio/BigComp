@@ -1,5 +1,4 @@
 package acs.repository.impl;
-
 import acs.domain.Group;
 import acs.repository.GroupRepository;
 import org.springframework.stereotype.Repository;
