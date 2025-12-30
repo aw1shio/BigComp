@@ -15,6 +15,8 @@ import acs.service.AdminService;
 
 import java.util.Optional;
 
+import org.springframework.stereotype.Service;
+
 /**
  * AdminServiceImpl：系统“管理端”业务实现
  *
@@ -35,6 +37,7 @@ import java.util.Optional;
  * - AccessControlService.processAccess() 需要保证“不抛异常给 UI”，
  *   但 Admin 这类管理接口一般可以抛（或你们也可以统一返回结果对象）。
  */
+@Service
 public class AdminServiceImpl implements AdminService {
 
     private final EmployeeRepository employeeRepo;

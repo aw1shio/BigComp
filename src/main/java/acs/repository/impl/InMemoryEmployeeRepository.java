@@ -1,5 +1,4 @@
 package acs.repository.impl;
-
 import acs.domain.Employee;
 import acs.repository.EmployeeRepository;
 import org.springframework.stereotype.Repository;
@@ -33,9 +32,9 @@ public class InMemoryEmployeeRepository implements EmployeeRepository {
 
     @Override
     public void save(Employee employee) {
-        if (employee == null || employee.getEmployeeId() == null) {
+        if (employee == null || employee.getId() == null) {
             return;
         }
-        store.put(employee.getEmployeeId(), employee);
+        store.put(employee.getId(), employee);
     }
 }

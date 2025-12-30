@@ -29,9 +29,9 @@ public class InMemoryBadgeRepository implements BadgeRepository {
 
     @Override
     public void save(Badge badge) {
-        if (badge == null || badge.getBadgeId() == null) {
+        if (badge == null || badge.getId() == null) {
             return;
         }
-        store.put(badge.getBadgeId(), badge);
+        store.put(badge.getId(), badge);
     }
 }

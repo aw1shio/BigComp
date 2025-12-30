@@ -22,9 +22,9 @@ public class InMemoryGroupRepository implements GroupRepository {
 
     @Override
     public void save(Group group) {
-        if (group == null || group.getGroupId() == null) {
+        if (group == null || group.getId() == null) {
             return;
         }
-        store.put(group.getGroupId(), group);
+        store.put(group.getId(), group);
     }
 }

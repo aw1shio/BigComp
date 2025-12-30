@@ -22,9 +22,9 @@ public class InMemoryResourceRepository implements ResourceRepository {
 
     @Override
     public void save(Resource resource) {
-        if (resource == null || resource.getResourceId() == null) {
+        if (resource == null || resource.getId() == null) {
             return;
         }
-        store.put(resource.getResourceId(), resource);
+        store.put(resource.getId(), resource);
     }
 }
