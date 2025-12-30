@@ -3,6 +3,8 @@ package acs.service;
 import acs.domain.AccessRequest;
 import acs.domain.AccessResult;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * AccessControlService 是整个系统的“唯一访问控制入口”
  *
@@ -24,4 +26,14 @@ public interface AccessControlService {
      * @return 访问结果
      */
     AccessResult processAccess(AccessRequest request);
+
+    /**
+     * 异步处理一次访问请求（用于并发/多线程模拟）。
+     *
+     * 说明：
+     * - domain 层不感知异步；异步仅是 service 的执行方式
+     * - 实现类仍需满足：不向 UI 抛异常、每次调用都记录审计日志
+     */
+    CompletableFuture<AccessResult> processAccessAsync(AccessRequest request);
 }
+

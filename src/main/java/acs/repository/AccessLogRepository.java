@@ -1,8 +1,8 @@
 package acs.repository;
 
-import acs.domain.LogEntry;
-
 import java.util.List;
+
+import acs.domain.LogEntry;
 
 public interface AccessLogRepository {
 
