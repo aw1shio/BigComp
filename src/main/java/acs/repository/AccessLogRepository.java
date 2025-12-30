@@ -1,12 +1,13 @@
 package acs.repository;
 
 import acs.domain.LogEntry;
-
 import java.util.List;
 
-public interface AccessLogRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-    void append(LogEntry entry);
+@Repository
+public interface AccessLogRepository extends JpaRepository<LogEntry, Long> {
 
     List<LogEntry> findAll();
 }

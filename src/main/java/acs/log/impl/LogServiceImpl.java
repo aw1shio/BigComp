@@ -16,6 +16,6 @@ public class LogServiceImpl implements LogService {
 
     @Override
     public void record(LogEntry entry) {
-        logRepo.append(entry);
+        logRepo.save(entry);
     }
 }
