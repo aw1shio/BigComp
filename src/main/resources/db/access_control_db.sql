@@ -1,6 +1,6 @@
 -- 创建数据库
-CREATE DATABASE IF NOT EXISTS bigcomp;
-USE bigcomp;
+CREATE DATABASE IF NOT EXISTS access_control_db;
+USE access_control_db;
 
 -- 员工表 (对应 AdminService.registerEmployee)
 CREATE TABLE employees (
