@@ -25,10 +25,10 @@ INSERT INTO permission_groups (group_id, group_name) VALUES
 INSERT INTO group_resource_permissions (group_id, resource_id) VALUES 
 ('G-DEV', 'R-DOOR-301');
 
--- 插入一条访问日志（成功）
+-- 插入访问日志（成功）
 INSERT INTO access_logs (timestamp, badge_id, employee_id, resource_id, decision, reason_code)
 VALUES (NOW(), 'B-10001', 'E-0001', 'R-DOOR-301', 'ALLOW', 'ALLOW');
 
--- 插入一条访问日志（失败：徽章挂失）
+-- 插入访问日志（失败：徽章挂失）
 INSERT INTO access_logs (timestamp, badge_id, employee_id, resource_id, decision, reason_code)
 VALUES (NOW(), 'B-10002', 'E-0002', 'R-DOOR-301', 'DENY', 'BADGE_INACTIVE');
