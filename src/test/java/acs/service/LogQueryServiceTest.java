@@ -1,7 +1,6 @@
 package acs.service;
 
 import acs.domain.LogEntry;
-import acs.repository.AccessLogRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,9 +17,6 @@ class LogQueryServiceTest {
 
     @Autowired
     private LogQueryService logQueryService;
-
-    @Autowired
-    private AccessLogRepository logRepository;
 
     // 测试时间范围（覆盖测试数据中的日志）
     private final Instant START = LocalDateTime.of(2024, 5, 1, 8, 0)

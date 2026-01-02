@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS access_logs (
     timestamp DATETIME NOT NULL,
     badge_id VARCHAR(50),
     employee_id VARCHAR(50),
-    resource_id VARCHAR(50) NOT NULL,
+    resource_id VARCHAR(50),
     decision ENUM('ALLOW', 'DENY') NOT NULL,
     reason_code ENUM(
         'ALLOW', 

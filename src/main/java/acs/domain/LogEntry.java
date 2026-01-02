@@ -31,7 +31,7 @@ public class LogEntry {
     private Employee employee;
 
     @ManyToOne
-    @JoinColumn(name = "resource_id", referencedColumnName = "resource_id", nullable = false)
+    @JoinColumn(name = "resource_id", referencedColumnName = "resource_id")
     private Resource resource;
 
     @Enumerated(EnumType.STRING)

@@ -13,6 +13,7 @@ import acs.repository.ResourceRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional; 
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -88,6 +89,7 @@ class AdminServiceTest {
     }
 
     @Test
+    @Transactional  // 添加此注解
     void testAssignEmployeeToGroup() {
         // 测试将员工加入组
         String empId = "E007";
@@ -112,6 +114,7 @@ class AdminServiceTest {
     }
 
     @Test
+    @Transactional
     void testGrantGroupAccessToResource() {
         // 测试授权组访问资源
         String groupId = "G005";

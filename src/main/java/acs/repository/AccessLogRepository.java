@@ -1,13 +1,23 @@
 package acs.repository;
 
 import acs.domain.LogEntry;
-import java.util.List;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Repository
 public interface AccessLogRepository extends JpaRepository<LogEntry, Long> {
 
-    List<LogEntry> findAll();
+    // 按徽章ID和时间范围查询
+    List<LogEntry> findByBadgeBadgeIdAndTimestampBetween(String badgeId, LocalDateTime start, LocalDateTime end);
+
+    // 按员工ID和时间范围查询
+    List<LogEntry> findByEmployeeEmployeeIdAndTimestampBetween(String employeeId, LocalDateTime start, LocalDateTime end);
+
+    // 按资源ID和时间范围查询
+    List<LogEntry> findByResourceResourceIdAndTimestampBetween(String resourceId, LocalDateTime start, LocalDateTime end);
+
+    // 按决策（DENY）和时间范围查询
+    List<LogEntry> findByDecisionAndTimestampBetween(String decision, LocalDateTime start, LocalDateTime end);
 }

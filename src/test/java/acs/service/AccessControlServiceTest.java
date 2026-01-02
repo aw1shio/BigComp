@@ -2,9 +2,12 @@ package acs.service;
 
 import acs.domain.AccessRequest;
 import acs.domain.AccessResult;
+import acs.domain.Badge;
+import acs.domain.BadgeStatus;
 import acs.domain.AccessDecision;
 import acs.domain.ReasonCode;
 import acs.repository.AccessLogRepository;
+import acs.repository.BadgeRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,6 +25,9 @@ class AccessControlServiceTest {
 
     @Autowired
     private AccessLogRepository logRepository;
+
+    @Autowired
+    private BadgeRepository badgeRepository;
 
     // 测试时间（使用固定时间便于测试）
     private final Instant TEST_TIME = Instant.now().truncatedTo(ChronoUnit.SECONDS);
@@ -58,13 +64,23 @@ class AccessControlServiceTest {
 
     @Test
     void testEmployeeNotFound() {
-        // 假设创建一个未绑定员工的徽章（测试数据中无此徽章，需提前创建）
-        // 此处简化：可通过AdminService创建一个无员工的徽章B998
+        // 1. 提前创建并保存一个未绑定员工的徽章B998
+        Badge unboundBadge = new Badge();
+        unboundBadge.setBadgeId("B998");
+        unboundBadge.setStatus(BadgeStatus.ACTIVE); // 确保徽章状态为活跃（避免触发BADGE_INACTIVE）
+        unboundBadge.setEmployee(null); // 不绑定员工
+        badgeRepository.save(unboundBadge); // 保存到数据库
+
+        // 2. 使用该徽章发起访问请求
         AccessRequest request = new AccessRequest("B998", "R001", TEST_TIME);
         AccessResult result = accessControlService.processAccess(request);
         
+        // 3. 验证结果
         assertEquals(AccessDecision.DENY, result.getDecision());
         assertEquals(ReasonCode.EMPLOYEE_NOT_FOUND, result.getReasonCode());
+
+        // 4. 清理测试数据（可选，避免影响其他测试）
+        badgeRepository.deleteById("B998");
     }
 
     @Test
@@ -80,7 +96,7 @@ class AccessControlServiceTest {
     @Test
     void testResourceLocked() {
         // 测试访问锁定的资源（R002状态为LOCKED）
-        AccessRequest request = new AccessRequest("B004", "R002", TEST_TIME);
+        AccessRequest request = new AccessRequest("B001", "R002", TEST_TIME);
         AccessResult result = accessControlService.processAccess(request);
         
         assertEquals(AccessDecision.DENY, result.getDecision());
