@@ -33,7 +33,7 @@ import java.util.Optional;
  * - 这里抛出 RuntimeException 是可以的（课程项目可接受），
  *   UI 层可以选择 catch 并给用户提示。
  * - AccessControlService.processAccess() 需要保证“不抛异常给 UI”，
- *   但 Admin 这类管理接口一般可以抛（或你们也可以统一返回结果对象）。
+ *   但 Admin 这类管理接口一般可以抛（或可以统一返回结果对象）。
  */
 public class AdminServiceImpl implements AdminService {
 

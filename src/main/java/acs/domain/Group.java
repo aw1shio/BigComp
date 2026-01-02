@@ -20,7 +20,7 @@ import jakarta.persistence.Table;
  * - 数据驱动，配置权限只需改 Group 的授权列表
  */
 @Entity
-@Table(name = "permission_group") // 指定数据库表名为t_group（前缀t_避免关键字冲突，也可改为sys_group、permission_group等）
+@Table(name = "permission_group") 
 public class Group {
 
     /** 组唯一 ID（例如：G-DEV） */
