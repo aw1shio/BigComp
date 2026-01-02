@@ -44,6 +44,9 @@ public class LogEntry {
     @Column(name = "reason_code")
     private ReasonCode reasonCode;
 
+    public LogEntry() {
+    }
+
     public LogEntry(Instant timestamp,
                     String badgeId,
                     String employeeId,

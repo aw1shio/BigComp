@@ -4,6 +4,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table; 
+
 /**
  * Group 表示一类权限角色（例如 Admin / Staff / Visitor）。
  *
@@ -15,9 +19,12 @@ import java.util.Set;
  * - 逻辑清晰，答辩好讲
  * - 数据驱动，配置权限只需改 Group 的授权列表
  */
+@Entity
+@Table(name = "permission_group") // 指定数据库表名为t_group（前缀t_避免关键字冲突，也可改为sys_group、permission_group等）
 public class Group {
 
     /** 组唯一 ID（例如：G-DEV） */
+    @Id
     private String id;
 
     /** 组名（用于 UI 展示） */
@@ -28,6 +35,10 @@ public class Group {
      * - 例如：G-DEV 可以访问 R-DOOR-301, R-PRINTER-2F
      */
     private final Set<String> resourceIds = new HashSet<>();
+
+    // 无参构造器（JPA实体类必须提供，否则Spring Data JPA无法通过反射实例化实体）
+    public Group() {
+    }
 
     public Group(String id, String name) {
         this.id = id;

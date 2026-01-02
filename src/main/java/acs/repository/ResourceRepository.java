@@ -2,11 +2,8 @@ package acs.repository;
 
 import acs.domain.Resource;
 
-import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ResourceRepository {
+public interface ResourceRepository extends JpaRepository<Resource, String> {
 
-    Optional<Resource> findById(String resourceId);
-
-    void save(Resource resource);
 }
