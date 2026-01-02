@@ -1,12 +1,8 @@
 package acs.domain;
 
-import java.util.Collections;
+import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table; 
 
 /**
  * Group 表示一类权限角色（例如 Admin / Staff / Visitor）。
@@ -19,42 +15,45 @@ import jakarta.persistence.Table;
  * - 逻辑清晰，答辩好讲
  * - 数据驱动，配置权限只需改 Group 的授权列表
  */
+
 @Entity
-@Table(name = "permission_group") 
+@Table(name = "group_permissions")
 public class Group {
 
-    /** 组唯一 ID（例如：G-DEV） */
     @Id
-    private String id;
+    @Column(name = "group_id", nullable = false, length = 50)
+    private String groupId;
 
-    /** 组名（用于 UI 展示） */
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    /**
-     * 本组被授权访问的资源 ID 集合
-     * - 例如：G-DEV 可以访问 R-DOOR-301, R-PRINTER-2F
-     */
-    private final Set<String> resourceIds = new HashSet<>();
+    @ManyToMany(mappedBy = "groups")
+    private Set<Employee> employees = new HashSet<>();
 
-    // 无参构造器（JPA实体类必须提供，否则Spring Data JPA无法通过反射实例化实体）
-    public Group() {
-    }
+    @ManyToMany
+    @JoinTable(
+        name = "group_resources",
+        joinColumns = @JoinColumn(name = "group_id"),
+        inverseJoinColumns = @JoinColumn(name = "resource_id")
+    )
+    private Set<Resource> resources = new HashSet<>();
 
-    public Group(String id, String name) {
-        this.id = id;
+    // 无参构造器（JPA必需）
+    public Group() {}
+
+    // 全参构造器
+    public Group(String groupId, String name) {
+        this.groupId = groupId;
         this.name = name;
     }
 
-    public Group(String id, String name, Set<String> resourceIds) {
-        this.id = id;
-        this.name = name;
-        if (resourceIds != null) {
-            this.resourceIds.addAll(resourceIds);
-        }
+    // Getter和Setter
+    public String getGroupId() {
+        return groupId;
     }
 
-    public String getId() {
-        return id;
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
     }
 
     public String getName() {
@@ -65,24 +64,19 @@ public class Group {
         this.name = name;
     }
 
-    /**
-     * 返回授权资源集合的只读视图，避免外部直接改内部集合。
-     */
-    public Set<String> getResourceIds() {
-        return Collections.unmodifiableSet(resourceIds);
+    public Set<Employee> getEmployees() {
+        return employees;
     }
 
-    /** 授权本组访问某资源（AdminService 可调用） */
-    public void grantResource(String resourceId) {
-        if (resourceId != null && !resourceId.isBlank()) {
-            resourceIds.add(resourceId);
-        }
+    public void setEmployees(Set<Employee> employees) {
+        this.employees = employees;
     }
 
-    /** 撤销本组对某资源的访问权限（AdminService 可调用） */
-    public void revokeResource(String resourceId) {
-        if (resourceId != null && !resourceId.isBlank()) {
-            resourceIds.remove(resourceId);
-        }
+    public Set<Resource> getResources() {
+        return resources;
+    }
+
+    public void setResources(Set<Resource> resources) {
+        this.resources = resources;
     }
 }

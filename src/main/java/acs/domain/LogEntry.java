@@ -1,8 +1,7 @@
 package acs.domain;
 
-import java.time.Instant;
-
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 /**
  * LogEntry 表示一条“访问日志记录”
@@ -11,77 +10,105 @@ import jakarta.persistence.*;
  * - 每一次访问（无论成功还是失败）都必须生成一条 LogEntry
  * - 日志是企业级访问控制系统的核心组成部分
  */
+
 @Entity
-@Table(name = "access_logs") // 对应数据库表名
+@Table(name = "access_logs")
 public class LogEntry {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // 自增主键
-    private Long id; // 主键字段
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    /** 访问发生的时间 */
-    @Column(name = "timestamp")
-    private Instant timestamp;
+    @Column(name = "timestamp", nullable = false)
+    private LocalDateTime timestamp;
 
-    /** 使用的 Badge ID */
-    @Column(name = "badge_id")
-    private String badgeId;
+    @ManyToOne
+    @JoinColumn(name = "badge_id", referencedColumnName = "badge_id")
+    private Badge badge;
 
-    /** 对应的员工 ID（如果能解析到） */
-    @Column(name = "employee_id")
-    private String employeeId;
+    @ManyToOne
+    @JoinColumn(name = "employee_id", referencedColumnName = "employee_id")
+    private Employee employee;
 
-    /** 被访问的资源 ID */
-    @Column(name = "resource_id")
-    private String resourceId;
+    @ManyToOne
+    @JoinColumn(name = "resource_id", referencedColumnName = "resource_id", nullable = false)
+    private Resource resource;
 
-    /** 最终访问决策 */
     @Enumerated(EnumType.STRING)
-    @Column(name = "decision")
+    @Column(name = "decision", nullable = false)
     private AccessDecision decision;
 
-    /** 访问结果原因码 */
     @Enumerated(EnumType.STRING)
-    @Column(name = "reason_code")
+    @Column(name = "reason_code", nullable = false)
     private ReasonCode reasonCode;
 
-    public LogEntry() {
-    }
+    // 无参构造器（JPA必需）
+    public LogEntry() {}
 
-    public LogEntry(Instant timestamp,
-                    String badgeId,
-                    String employeeId,
-                    String resourceId,
-                    AccessDecision decision,
-                    ReasonCode reasonCode) {
+    // 全参构造器
+    public LogEntry(LocalDateTime timestamp, Badge badge, Employee employee, Resource resource, AccessDecision decision, ReasonCode reasonCode) {
         this.timestamp = timestamp;
-        this.badgeId = badgeId;
-        this.employeeId = employeeId;
-        this.resourceId = resourceId;
+        this.badge = badge;
+        this.employee = employee;
+        this.resource = resource;
         this.decision = decision;
         this.reasonCode = reasonCode;
     }
 
-    public Instant getTimestamp() {
+    // Getter和Setter
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public LocalDateTime getTimestamp() {
         return timestamp;
     }
 
-    public String getBadgeId() {
-        return badgeId;
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
     }
 
-    public String getEmployeeId() {
-        return employeeId;
+    public Badge getBadge() {
+        return badge;
     }
 
-    public String getResourceId() {
-        return resourceId;
+    public void setBadge(Badge badge) {
+        this.badge = badge;
+    }
+
+    public Employee getEmployee() {
+        return employee;
+    }
+
+    public void setEmployee(Employee employee) {
+        this.employee = employee;
+    }
+
+    public Resource getResource() {
+        return resource;
+    }
+
+    public void setResource(Resource resource) {
+        this.resource = resource;
     }
 
     public AccessDecision getDecision() {
         return decision;
     }
 
+    public void setDecision(AccessDecision decision) {
+        this.decision = decision;
+    }
+
     public ReasonCode getReasonCode() {
         return reasonCode;
+    }
+
+    public void setReasonCode(ReasonCode reasonCode) {
+        this.reasonCode = reasonCode;
     }
 }

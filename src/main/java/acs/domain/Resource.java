@@ -1,7 +1,9 @@
 package acs.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Resource 表示受控资源（门、房间、设备等）。
  *
@@ -9,66 +11,79 @@ import jakarta.persistence.Id;
  * - ResourceType 描述资源类型（DOOR/PRINTER/...）
  * - ResourceState 描述资源状态（AVAILABLE/OCCUPIED/LOCKED/OFFLINE）
  * - 权限不直接写在 Resource 中（我们选择由 Group 管理授权列表）
- */
+ */ 
+
 @Entity
+@Table(name = "resources")
 public class Resource {
 
-    /** 资源唯一 ID（例如：R-DOOR-301） */
     @Id
-    private String id;
+    @Column(name = "resource_id", nullable = false, length = 50)
+    private String resourceId;
 
-    /** 资源名称（例如：Door 301 / Printer 2F） */
-    private String name;
+    @Column(name = "resource_name", nullable = false, length = 100)
+    private String resourceName;
 
-    /** 资源类型 */
-    private ResourceType type;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "resource_type", nullable = false)
+    private ResourceType resourceType;
 
-    /** 资源状态 */
-    private ResourceState state;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "resource_state", nullable = false)
+    private ResourceState resourceState;
 
-    // 无参构造器（JPA实体类必须提供，否则无法通过反射实例化）
-    public Resource() {
+    @ManyToMany(mappedBy = "resources")
+    private Set<Group> groups = new HashSet<>();
+
+    // 无参构造器（JPA必需）
+    public Resource() {}
+
+    // 全参构造器
+    public Resource(String resourceId, String resourceName, ResourceType resourceType, ResourceState resourceState) {
+        this.resourceId = resourceId;
+        this.resourceName = resourceName;
+        this.resourceType = resourceType;
+        this.resourceState = resourceState;
     }
 
-    public Resource(String id, String name, ResourceType type) {
-        this.id = id;
-        this.name = name;
-        this.type = type;
-        this.state = ResourceState.AVAILABLE; // 默认可用
+    // Getter和Setter
+    public String getResourceId() {
+        return resourceId;
     }
 
-    public Resource(String id, String name, ResourceType type, ResourceState state) {
-        this.id = id;
-        this.name = name;
-        this.type = type;
-        this.state = state;
+    public void setResourceId(String resourceId) {
+        this.resourceId = resourceId;
     }
 
-    public String getId() {
-        return id;
+    public String getResourceName() {
+        return resourceName;
     }
 
-    public String getName() {
-        return name;
+    public void setResourceName(String resourceName) {
+        this.resourceName = resourceName;
     }
 
-    public ResourceType getType() {
-        return type;
+    public ResourceType getResourceType() {
+        return resourceType;
     }
 
-    public ResourceState getState() {
-        return state;
+    public void setResourceType(ResourceType resourceType) {
+        this.resourceType = resourceType;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public ResourceState getResourceState() {
+        return resourceState;
     }
 
-    public void setType(ResourceType type) {
-        this.type = type;
+    public void setResourceState(ResourceState resourceState) {
+        this.resourceState = resourceState;
     }
 
-    public void setState(ResourceState state) {
-        this.state = state;
+    public Set<Group> getGroups() {
+        return groups;
+    }
+
+    public void setGroups(Set<Group> groups) {
+        this.groups = groups;
     }
 }
