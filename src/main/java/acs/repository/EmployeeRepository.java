@@ -10,5 +10,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface EmployeeRepository extends JpaRepository<Employee, String> {
 
-    Optional<Employee> findByNameContaining(String name);
+    Optional<Employee> findByEmployeeNameContaining(String name);
 }

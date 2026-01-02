@@ -13,7 +13,7 @@ public class LogServiceImpl implements LogService {
     public LogServiceImpl(AccessLogRepository logRepo) {
         this.logRepo = logRepo;
     }
-
+    
     @Override
     public void record(LogEntry entry) {
         logRepo.save(entry);

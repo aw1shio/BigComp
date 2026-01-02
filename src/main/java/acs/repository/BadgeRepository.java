@@ -12,6 +12,6 @@ import org.springframework.stereotype.Repository;
 public interface BadgeRepository extends JpaRepository<Badge, String> {
 
     Optional<Badge> findById(String badgeId);
-    Optional<Badge> findByEmployeeId(String employeeId);
+    Optional<Badge> findByEmployeeEmployeeId(String employeeId);
 
 }
