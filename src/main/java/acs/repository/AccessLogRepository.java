@@ -20,4 +20,7 @@ public interface AccessLogRepository extends JpaRepository<LogEntry, Long> {
 
     // 按决策（DENY）和时间范围查询
     List<LogEntry> findByDecisionAndTimestampBetween(String decision, LocalDateTime start, LocalDateTime end);
+
+    // 删除指定时间之前的日志
+    long deleteByTimestampBefore(LocalDateTime timestamp);
 }

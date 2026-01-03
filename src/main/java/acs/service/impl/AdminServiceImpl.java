@@ -1,5 +1,6 @@
 package acs.service.impl;
 
+import acs.cache.LocalCacheManager;
 import acs.domain.Badge;
 import acs.domain.BadgeStatus;
 import acs.domain.Employee;
@@ -18,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AdminServiceImpl implements AdminService {
 
+    // 注入LocalCacheManager
+    private final LocalCacheManager cacheManager;
     private final EmployeeRepository employeeRepository;
     private final BadgeRepository badgeRepository;
     private final GroupRepository groupRepository;
@@ -26,11 +29,13 @@ public class AdminServiceImpl implements AdminService {
     public AdminServiceImpl(EmployeeRepository employeeRepository,
                             BadgeRepository badgeRepository,
                             GroupRepository groupRepository,
-                            ResourceRepository resourceRepository) {
+                            ResourceRepository resourceRepository,
+                            LocalCacheManager cacheManager) {
         this.employeeRepository = employeeRepository;
         this.badgeRepository = badgeRepository;
         this.groupRepository = groupRepository;
         this.resourceRepository = resourceRepository;
+        this.cacheManager = cacheManager;
     }
 
     @Override
@@ -39,7 +44,10 @@ public class AdminServiceImpl implements AdminService {
         if (employeeRepository.existsById(employeeId)) {
             throw new IllegalStateException("员工ID已存在: " + employeeId);
         }
-        employeeRepository.save(new Employee(employeeId, name));
+        Employee employee = new Employee(employeeId, name);
+        employeeRepository.save(employee);
+        // 同步缓存
+        cacheManager.updateEmployee(employee);
     }
 
     @Override
@@ -58,6 +66,9 @@ public class AdminServiceImpl implements AdminService {
         
         employee.setBadge(badge);
         employeeRepository.save(employee);
+        // 同步缓存
+        cacheManager.updateBadge(badge);
+        cacheManager.updateEmployee(employee);
     }
 
     @Override
@@ -67,6 +78,8 @@ public class AdminServiceImpl implements AdminService {
                 .orElseThrow(() -> new IllegalArgumentException("徽章不存在: " + badgeId));
         badge.setStatus(status);
         badgeRepository.save(badge);
+        // 同步缓存
+        cacheManager.updateBadge(badge);
     }
 
     @Override
@@ -75,7 +88,10 @@ public class AdminServiceImpl implements AdminService {
         if (groupRepository.existsById(groupId)) {
             throw new IllegalStateException("组ID已存在: " + groupId);
         }
-        groupRepository.save(new Group(groupId, groupName));
+        Group group = new Group(groupId, groupName);
+        groupRepository.save(group);
+        // 同步缓存
+        cacheManager.updateGroup(group);
     }
 
     @Override
@@ -91,6 +107,9 @@ public class AdminServiceImpl implements AdminService {
         
         employeeRepository.save(employee);
         groupRepository.save(group);
+        // 同步缓存
+        cacheManager.updateEmployee(employee);
+        cacheManager.updateGroup(group);
     }
 
     @Override
@@ -106,6 +125,9 @@ public class AdminServiceImpl implements AdminService {
         
         employeeRepository.save(employee);
         groupRepository.save(group);
+        // 同步缓存
+        cacheManager.updateEmployee(employee);
+        cacheManager.updateGroup(group);
     }
 
     @Override
@@ -115,7 +137,10 @@ public class AdminServiceImpl implements AdminService {
             throw new IllegalStateException("资源ID已存在: " + resourceId);
         }
         // 新资源默认状态为可用
-        resourceRepository.save(new Resource(resourceId, name, type, ResourceState.AVAILABLE));
+        Resource resource = new Resource(resourceId, name, type, ResourceState.AVAILABLE);
+        resourceRepository.save(resource);
+        // 同步缓存
+        cacheManager.updateResource(resource);
     }
 
     @Override
@@ -125,6 +150,8 @@ public class AdminServiceImpl implements AdminService {
                 .orElseThrow(() -> new IllegalArgumentException("资源不存在: " + resourceId));
         resource.setResourceState(state);
         resourceRepository.save(resource);
+        // 同步缓存
+        cacheManager.updateResource(resource);
     }
 
     @Override
@@ -140,6 +167,9 @@ public class AdminServiceImpl implements AdminService {
         
         groupRepository.save(group);
         resourceRepository.save(resource);
+        // 同步缓存
+        cacheManager.updateGroup(group);
+        cacheManager.updateResource(resource);
     }
 
     @Override
@@ -155,5 +185,8 @@ public class AdminServiceImpl implements AdminService {
         
         groupRepository.save(group);
         resourceRepository.save(resource);
+        // 同步缓存
+        cacheManager.updateGroup(group);
+        cacheManager.updateResource(resource);
     }
 }

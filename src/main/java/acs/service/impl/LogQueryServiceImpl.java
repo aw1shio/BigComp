@@ -1,8 +1,8 @@
 package acs.service.impl;
 
 import acs.domain.LogEntry;
-import acs.repository.AccessLogRepository;
 import acs.service.LogQueryService;
+import acs.cache.LocalCacheManager;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -14,60 +14,54 @@ import java.util.stream.Collectors;
 @Service
 public class LogQueryServiceImpl implements LogQueryService {
 
-    private final AccessLogRepository logRepository;
+    private final LocalCacheManager cacheManager;
 
-    public LogQueryServiceImpl(AccessLogRepository logRepository) {
-        this.logRepository = logRepository;
+    public LogQueryServiceImpl(LocalCacheManager cacheManager) {
+        this.cacheManager = cacheManager;
     }
 
+    // 按徽章查询日志
     @Override
     public List<LogEntry> findByBadge(String badgeId, Instant from, Instant to) {
         LocalDateTime start = LocalDateTime.ofInstant(from, ZoneId.systemDefault());
         LocalDateTime end = LocalDateTime.ofInstant(to, ZoneId.systemDefault());
-        
-        return logRepository.findAll().stream()
-                .filter(log -> log.getBadge() != null 
-                        && log.getBadge().getBadgeId().equals(badgeId)
-                        && !log.getTimestamp().isBefore(start)
-                        && !log.getTimestamp().isAfter(end))
+        // 从缓存过滤
+        return cacheManager.getLogs().stream()
+                .filter(log -> log.getBadge() != null && log.getBadge().getBadgeId().equals(badgeId))
+                .filter(log -> !log.getTimestamp().isBefore(start) && !log.getTimestamp().isAfter(end))
                 .collect(Collectors.toList());
     }
 
+    // 按员工查询日志
     @Override
     public List<LogEntry> findByEmployee(String employeeId, Instant from, Instant to) {
         LocalDateTime start = LocalDateTime.ofInstant(from, ZoneId.systemDefault());
         LocalDateTime end = LocalDateTime.ofInstant(to, ZoneId.systemDefault());
-        
-        return logRepository.findAll().stream()
-                .filter(log -> log.getEmployee() != null 
-                        && log.getEmployee().getEmployeeId().equals(employeeId)
-                        && !log.getTimestamp().isBefore(start)
-                        && !log.getTimestamp().isAfter(end))
+        return cacheManager.getLogs().stream()
+                .filter(log -> log.getEmployee() != null && log.getEmployee().getEmployeeId().equals(employeeId))
+                .filter(log -> !log.getTimestamp().isBefore(start) && !log.getTimestamp().isAfter(end))
                 .collect(Collectors.toList());
     }
 
+    // 按资源查询日志
     @Override
     public List<LogEntry> findByResource(String resourceId, Instant from, Instant to) {
         LocalDateTime start = LocalDateTime.ofInstant(from, ZoneId.systemDefault());
         LocalDateTime end = LocalDateTime.ofInstant(to, ZoneId.systemDefault());
-        
-        return logRepository.findAll().stream()
-                .filter(log -> log.getResource() != null 
-                        && log.getResource().getResourceId().equals(resourceId)
-                        && !log.getTimestamp().isBefore(start)
-                        && !log.getTimestamp().isAfter(end))
+        return cacheManager.getLogs().stream()
+                .filter(log -> log.getResource() != null && log.getResource().getResourceId().equals(resourceId))
+                .filter(log -> !log.getTimestamp().isBefore(start) && !log.getTimestamp().isAfter(end))
                 .collect(Collectors.toList());
     }
 
+    // 查询被拒绝的日志
     @Override
     public List<LogEntry> findDenied(Instant from, Instant to) {
         LocalDateTime start = LocalDateTime.ofInstant(from, ZoneId.systemDefault());
         LocalDateTime end = LocalDateTime.ofInstant(to, ZoneId.systemDefault());
-        
-        return logRepository.findAll().stream()
-                .filter(log -> log.getDecision().name().equals("DENY")
-                        && !log.getTimestamp().isBefore(start)
-                        && !log.getTimestamp().isAfter(end))
+        return cacheManager.getLogs().stream()
+                .filter(log -> log.getDecision().toString().equals("DENY"))
+                .filter(log -> !log.getTimestamp().isBefore(start) && !log.getTimestamp().isAfter(end))
                 .collect(Collectors.toList());
     }
 }

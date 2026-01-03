@@ -2,6 +2,7 @@ package acs.service.impl;
 
 import acs.domain.AccessRequest;
 import acs.domain.AccessResult;
+import acs.cache.LocalCacheManager;
 import acs.domain.AccessDecision;
 import acs.domain.Badge;
 import acs.domain.BadgeStatus;
@@ -11,9 +12,6 @@ import acs.domain.ReasonCode;
 import acs.domain.Resource;
 import acs.domain.ResourceState;
 import acs.log.LogService;
-import acs.repository.BadgeRepository;
-import acs.repository.EmployeeRepository;
-import acs.repository.ResourceRepository;
 import acs.service.AccessControlService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,21 +22,18 @@ import java.time.ZoneId;
 @Service
 public class AccessControlServiceImpl implements AccessControlService {
 
-    private final BadgeRepository badgeRepository;
-    private final EmployeeRepository employeeRepository;
-    private final ResourceRepository resourceRepository;
     private final LogService logService;
+    // 在类中注入LocalCacheManager
+    private final LocalCacheManager cacheManager;
 
-    public AccessControlServiceImpl(BadgeRepository badgeRepository,
-                                    EmployeeRepository employeeRepository,
-                                    ResourceRepository resourceRepository,
-                                    LogService logService) {
-        this.badgeRepository = badgeRepository;
-        this.employeeRepository = employeeRepository;
-        this.resourceRepository = resourceRepository;
+    public AccessControlServiceImpl(
+                                LogService logService,
+                                LocalCacheManager cacheManager) {
         this.logService = logService;
+        this.cacheManager = cacheManager;
     }
 
+    // 修改processAccess方法中的数据访问部分，使用缓存
     @Override
     @Transactional
     public AccessResult processAccess(AccessRequest request) {
@@ -52,9 +47,8 @@ public class AccessControlServiceImpl implements AccessControlService {
         }
 
         try {
-            // 2. 验证徽章存在性
-            Badge badge = badgeRepository.findById(request.getBadgeId())
-                    .orElse(null);
+            // 2. 验证徽章存在性 - 从缓存获取
+            Badge badge = cacheManager.getBadge(request.getBadgeId());
             if (badge == null) {
                 AccessResult result = new AccessResult(AccessDecision.DENY, ReasonCode.BADGE_NOT_FOUND, "徽章不存在");
                 recordLog(null, null, null, result, request);
@@ -68,17 +62,17 @@ public class AccessControlServiceImpl implements AccessControlService {
                 return result;
             }
 
-            // 4. 验证员工存在性
-            Employee employee = badge.getEmployee();
-            if (employee == null || !employeeRepository.existsById(employee.getEmployeeId())) {
+            // 4. 验证员工存在性 - 从缓存获取
+            Employee employee = badge.getEmployee() != null ? 
+                cacheManager.getEmployee(badge.getEmployee().getEmployeeId()) : null;
+            if (employee == null) {
                 AccessResult result = new AccessResult(AccessDecision.DENY, ReasonCode.EMPLOYEE_NOT_FOUND, "徽章未绑定有效员工");
                 recordLog(badge, null, null, result, request);
                 return result;
             }
 
-            // 5. 验证资源存在性
-            Resource resource = resourceRepository.findById(request.getResourceId())
-                    .orElse(null);
+            // 5. 验证资源存在性 - 从缓存获取
+            Resource resource = cacheManager.getResource(request.getResourceId());
             if (resource == null) {
                 AccessResult result = new AccessResult(AccessDecision.DENY, ReasonCode.RESOURCE_NOT_FOUND, "访问的资源不存在");
                 recordLog(badge, employee, null, result, request);
@@ -107,7 +101,6 @@ public class AccessControlServiceImpl implements AccessControlService {
                 recordLog(badge, employee, resource, result, request);
                 return result;
             }
-
 
             // 8. 所有验证通过，允许访问
             AccessResult result = new AccessResult(AccessDecision.ALLOW, ReasonCode.ALLOW, "允许访问");
