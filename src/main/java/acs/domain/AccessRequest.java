@@ -1,6 +1,8 @@
 package acs.domain;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 /**
  * AccessRequest 表示一次“访问请求”
@@ -45,10 +47,24 @@ public class AccessRequest {
      * @param resourceId 被访问的资源 ID
      * @param timestamp  访问时间
      */
+
+    //无参构造
+    public AccessRequest() {
+    }
+
+    //Instant构造器
     public AccessRequest(String badgeId, String resourceId, Instant timestamp) {
         this.badgeId = badgeId;
         this.resourceId = resourceId;
         this.timestamp = timestamp;
+    }
+
+    // localDateTime构造器
+    public AccessRequest(String badgeId, String resourceId, LocalDateTime localDateTime) {
+        this.badgeId = badgeId;
+        this.resourceId = resourceId;
+        // Convert LocalDateTime to Instant using a time zone (e.g., UTC)
+        this.timestamp = localDateTime.atZone(ZoneId.of("UTC")).toInstant();
     }
 
     public String getBadgeId() {
@@ -62,4 +78,17 @@ public class AccessRequest {
     public Instant getTimestamp() {
         return timestamp;
     }
+
+    public void setBadgeId(String badgeId) {
+        this.badgeId = badgeId;
+    }
+
+    public void setResourceId(String resourceId) {
+        this.resourceId = resourceId;
+    }
+
+    public void setTimestamp(Instant timestamp) {
+        this.timestamp = timestamp;
+    }
+
 }

@@ -1,5 +1,7 @@
 package acs.domain;
 
+import jakarta.persistence.*;
+
 /**
  * Badge 表示员工使用的“徽章/卡片/凭证”。
  *
@@ -8,48 +10,53 @@ package acs.domain;
  * - status 用于启用/禁用/挂失
  * - employeeId 用于绑定员工（可为空表示未分配）
  */
+
+@Entity
+@Table(name = "badges")
 public class Badge {
 
-    /** 徽章唯一 ID（例如：B-10001） */
-    private String id;
+    @Id
+    @Column(name = "badge_id", nullable = false, length = 50)
+    private String badgeId;
 
-    /** 徽章状态：ACTIVE / DISABLED / LOST */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
     private BadgeStatus status;
 
-    /**
-     * 当前徽章绑定的员工 ID
-     * - 可为空：表示该徽章未分配给任何员工
-     */
-    private String employeeId;
+    @OneToOne(mappedBy = "badge")
+    private Employee employee;
 
-    public Badge(String id) {
-        this.id = id;
-        this.status = BadgeStatus.ACTIVE;
-    }
+    // 无参构造器（JPA必需）
+    public Badge() {}
 
-    public Badge(String id, BadgeStatus status, String employeeId) {
-        this.id = id;
+    // 全参构造器
+    public Badge(String badgeId, BadgeStatus status) {
+        this.badgeId = badgeId;
         this.status = status;
-        this.employeeId = employeeId;
     }
 
-    public String getId() {
-        return id;
+    // Getter和Setter
+    public String getBadgeId() {
+        return badgeId;
+    }
+
+    public void setBadgeId(String badgeId) {
+        this.badgeId = badgeId;
     }
 
     public BadgeStatus getStatus() {
         return status;
     }
 
-    public String getEmployeeId() {
-        return employeeId;
-    }
-
     public void setStatus(BadgeStatus status) {
         this.status = status;
     }
 
-    public void setEmployeeId(String employeeId) {
-        this.employeeId = employeeId;
+    public Employee getEmployee() {
+        return employee;
+    }
+
+    public void setEmployee(Employee employee) {
+        this.employee = employee;
     }
 }

@@ -1,85 +1,71 @@
 package acs.domain;
 
-import java.util.Collections;
+import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Employee 表示一个系统用户（员工/访客等）。
- *
- * 设计原则：
- * - 仅保存员工基本信息和权限相关关联关系（badgeId、groupIds）
- * - 不包含任何访问控制判断逻辑（判断逻辑应在 service 层）
- */
+@Entity
+@Table(name = "employees")
 public class Employee {
 
-    /** 员工唯一 ID（例如：E-0001） */
-    private String id;
+    @Id
+    @Column(name = "employee_id", nullable = false, length = 50)
+    private String employeeId;
 
-    /** 员工姓名（用于 UI 展示、日志辅助） */
-    private String name;
+    @Column(name = "employee_name", nullable = false, length = 100)
+    private String employeeName;
 
-    /**
-     * 员工当前绑定的 BadgeId
-     * - 允许为空：例如新员工未发卡、卡已回收等情况
-     */
-    private String badgeId;
+    @OneToOne
+    @JoinColumn(name = "badge_id", referencedColumnName = "badge_id")
+    private Badge badge;
 
-    /**
-     * 员工所属的权限组 ID 集合
-     * 访问权限通常由 “员工所属组” 与 “组被授权资源” 决定
-     */
-    private final Set<String> groupIds = new HashSet<>();
+    @ManyToMany
+    @JoinTable(
+        name = "employee_groups",
+        joinColumns = @JoinColumn(name = "employee_id"),
+        inverseJoinColumns = @JoinColumn(name = "group_id")
+    )
+    private Set<Group> groups = new HashSet<>();
 
-    public Employee(String id, String name) {
-        this.id = id;
-        this.name = name;
+    // 无参构造器（JPA必需）
+    public Employee() {}
+
+    // 全参构造器
+    public Employee(String employeeId, String employeeName) {
+        this.employeeId = employeeId;
+        this.employeeName = employeeName;
     }
 
-    public Employee(String id, String name, String badgeId) {
-        this.id = id;
-        this.name = name;
-        this.badgeId = badgeId;
+    // Getter和Setter
+    public String getEmployeeId() {
+        return employeeId;
     }
 
-    public String getId() {
-        return id;
+    public void setEmployeeId(String employeeId) {
+        this.employeeId = employeeId;
     }
 
-    public String getName() {
-        return name;
+    public String getEmployeeName() {
+        return employeeName;
     }
 
-    public String getBadgeId() {
-        return badgeId;
+    public void setEmployeeName(String employeeName) {
+        this.employeeName = employeeName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public Badge getBadge() {
+        return badge;
     }
 
-    public void setBadgeId(String badgeId) {
-        this.badgeId = badgeId;
+    public void setBadge(Badge badge) {
+        this.badge = badge;
     }
 
-    /**
-     * 返回员工所属组的只读视图，避免外部直接改内部集合。
-     */
-    public Set<String> getGroupIds() {
-        return Collections.unmodifiableSet(groupIds);
+    public Set<Group> getGroups() {
+        return groups;
     }
 
-    /** 将员工加入某权限组（service/AdminService 可调用） */
-    public void addToGroup(String groupId) {
-        if (groupId != null && !groupId.isBlank()) {
-            groupIds.add(groupId);
-        }
-    }
-
-    /** 将员工从某权限组移除（service/AdminService 可调用） */
-    public void removeFromGroup(String groupId) {
-        if (groupId != null && !groupId.isBlank()) {
-            groupIds.remove(groupId);
-        }
+    public void setGroups(Set<Group> groups) {
+        this.groups = groups;
     }
 }

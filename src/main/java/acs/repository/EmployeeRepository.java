@@ -4,11 +4,11 @@ import acs.domain.Employee;
 
 import java.util.Optional;
 
-public interface EmployeeRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-    Optional<Employee> findById(String employeeId);
+@Repository
+public interface EmployeeRepository extends JpaRepository<Employee, String> {
 
-    Optional<Employee> findByBadgeId(String badgeId);
-
-    void save(Employee employee);
+    Optional<Employee> findByEmployeeNameContaining(String name);
 }

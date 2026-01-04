@@ -1,148 +1,118 @@
 package acs.service.impl;
 
-import acs.domain.AccessDecision;
 import acs.domain.AccessRequest;
 import acs.domain.AccessResult;
+import acs.cache.LocalCacheManager;
+import acs.domain.AccessDecision;
 import acs.domain.Badge;
 import acs.domain.BadgeStatus;
 import acs.domain.Employee;
-import acs.domain.Group;
 import acs.domain.LogEntry;
 import acs.domain.ReasonCode;
 import acs.domain.Resource;
 import acs.domain.ResourceState;
 import acs.log.LogService;
-import acs.repository.BadgeRepository;
-import acs.repository.EmployeeRepository;
-import acs.repository.GroupRepository;
-import acs.repository.ResourceRepository;
 import acs.service.AccessControlService;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Service
 public class AccessControlServiceImpl implements AccessControlService {
 
-    private final BadgeRepository badgeRepository;
-    private final EmployeeRepository employeeRepository;
-    private final ResourceRepository resourceRepository;
-    private final GroupRepository groupRepository;
     private final LogService logService;
+    // 在类中注入LocalCacheManager
+    private final LocalCacheManager cacheManager;
 
-    // 构造器注入所有依赖
-    public AccessControlServiceImpl(BadgeRepository badgeRepository,
-                                    EmployeeRepository employeeRepository,
-                                    ResourceRepository resourceRepository,
-                                    GroupRepository groupRepository,
-                                    LogService logService) {
-        this.badgeRepository = badgeRepository;
-        this.employeeRepository = employeeRepository;
-        this.resourceRepository = resourceRepository;
-        this.groupRepository = groupRepository;
+    public AccessControlServiceImpl(
+                                LogService logService,
+                                LocalCacheManager cacheManager) {
         this.logService = logService;
+        this.cacheManager = cacheManager;
     }
 
+    // 修改processAccess方法中的数据访问部分，使用缓存
     @Override
+    @Transactional
     public AccessResult processAccess(AccessRequest request) {
-        // 初始化日志基础信息
-        String badgeId = request.getBadgeId();
-        String resourceId = request.getResourceId();
-        String employeeId = null;
-        AccessDecision decision = AccessDecision.DENY;
-        ReasonCode reasonCode = ReasonCode.SYSTEM_ERROR;
+        // 1. 验证请求参数
+        if (request.getBadgeId() == null || request.getBadgeId().trim().isEmpty() ||
+                request.getResourceId() == null || request.getResourceId().trim().isEmpty() ||
+                request.getTimestamp() == null) {
+            AccessResult result = new AccessResult(AccessDecision.DENY, ReasonCode.INVALID_REQUEST, "无效的访问请求参数");
+            recordLog(null, null, null, result, request);
+            return result;
+        }
 
         try {
-            // 1. 校验请求参数合法性
-            if (badgeId == null || badgeId.isBlank() || 
-                resourceId == null || resourceId.isBlank() || 
-                request.getTimestamp() == null) {
-                reasonCode = ReasonCode.INVALID_REQUEST;
-                return buildResultAndLog(request, decision, reasonCode, employeeId, "无效请求：参数缺失或为空");
+            // 2. 验证徽章存在性 - 从缓存获取
+            Badge badge = cacheManager.getBadge(request.getBadgeId());
+            if (badge == null) {
+                AccessResult result = new AccessResult(AccessDecision.DENY, ReasonCode.BADGE_NOT_FOUND, "徽章不存在");
+                recordLog(null, null, null, result, request);
+                return result;
             }
 
-            // 2. 检查徽章是否存在
-            Optional<Badge> badgeOpt = badgeRepository.findById(badgeId);
-            if (badgeOpt.isEmpty()) {
-                reasonCode = ReasonCode.BADGE_NOT_FOUND;
-                return buildResultAndLog(request, decision, reasonCode, employeeId, "徽章不存在");
-            }
-            Badge badge = badgeOpt.get();
-            employeeId = badge.getEmployeeId(); // 记录员工ID（可能为null）
-
-            // 3. 检查徽章状态是否活跃
+            // 3. 验证徽章状态
             if (badge.getStatus() != BadgeStatus.ACTIVE) {
-                reasonCode = ReasonCode.BADGE_INACTIVE;
-                return buildResultAndLog(request, decision, reasonCode, employeeId, "徽章不可用（已禁用或挂失）");
+                AccessResult result = new AccessResult(AccessDecision.DENY, ReasonCode.BADGE_INACTIVE, "徽章不可用（已禁用或挂失）");
+                recordLog(badge, null, null, result, request);
+                return result;
             }
 
-            // 4. 检查徽章绑定的员工是否存在
-            if (employeeId == null || employeeId.isBlank()) {
-                reasonCode = ReasonCode.EMPLOYEE_NOT_FOUND;
-                return buildResultAndLog(request, decision, reasonCode, employeeId, "徽章未绑定员工");
+            // 4. 验证员工存在性 - 从缓存获取
+            Employee employee = badge.getEmployee() != null ? 
+                cacheManager.getEmployee(badge.getEmployee().getEmployeeId()) : null;
+            if (employee == null) {
+                AccessResult result = new AccessResult(AccessDecision.DENY, ReasonCode.EMPLOYEE_NOT_FOUND, "徽章未绑定有效员工");
+                recordLog(badge, null, null, result, request);
+                return result;
             }
-            Optional<Employee> employeeOpt = employeeRepository.findById(employeeId);
-            if (employeeOpt.isEmpty()) {
-                reasonCode = ReasonCode.EMPLOYEE_NOT_FOUND;
-                return buildResultAndLog(request, decision, reasonCode, employeeId, "员工信息不存在");
-            }
-            Employee employee = employeeOpt.get();
 
-            // 5. 检查资源是否存在
-            Optional<Resource> resourceOpt = resourceRepository.findById(resourceId);
-            if (resourceOpt.isEmpty()) {
-                reasonCode = ReasonCode.RESOURCE_NOT_FOUND;
-                return buildResultAndLog(request, decision, reasonCode, employeeId, "资源不存在");
+            // 5. 验证资源存在性 - 从缓存获取
+            Resource resource = cacheManager.getResource(request.getResourceId());
+            if (resource == null) {
+                AccessResult result = new AccessResult(AccessDecision.DENY, ReasonCode.RESOURCE_NOT_FOUND, "访问的资源不存在");
+                recordLog(badge, employee, null, result, request);
+                return result;
             }
-            Resource resource = resourceOpt.get();
 
-            // 6. 检查资源状态是否允许访问
-            ResourceState resourceState = resource.getState();
-            if (resourceState == ResourceState.LOCKED) {
-                reasonCode = ReasonCode.RESOURCE_LOCKED;
-                return buildResultAndLog(request, decision, reasonCode, employeeId, "资源已锁定");
-            }
-            if (resourceState == ResourceState.OCCUPIED) {
-                reasonCode = ReasonCode.RESOURCE_OCCUPIED;
-                return buildResultAndLog(request, decision, reasonCode, employeeId, "资源当前被占用");
-            }
-            if (resourceState == ResourceState.OFFLINE) {
-                reasonCode = ReasonCode.RESOURCE_OCCUPIED; // 离线状态视为不可访问
-                return buildResultAndLog(request, decision, reasonCode, employeeId, "资源离线不可用");
-            }
-            
-            if (!resourceRepository.tryOccupy(resourceId)) {
-                reasonCode = ReasonCode.RESOURCE_OCCUPIED;
-                return buildResultAndLog(request, decision, reasonCode, employeeId, "资源当前被占用");
-            }
-            
-            // 7. 检查员工所属组是否有资源访问权限
-            Set<String> groupIds = employee.getGroupIds();
-            boolean hasPermission = false;
-            for (String groupId : groupIds) {
-                Optional<Group> groupOpt = groupRepository.findById(groupId);
-                if (groupOpt.isPresent() && groupOpt.get().getResourceIds().contains(resourceId)) {
-                    hasPermission = true;
-                    break;
-                }
-            }
+            // 6. 验证权限（员工所属组是否有权限访问该资源）
+            boolean hasPermission = employee.getGroups().stream()
+                    .flatMap(group -> group.getResources().stream())
+                    .anyMatch(r -> r.getResourceId().equals(resource.getResourceId()));
+
             if (!hasPermission) {
-                reasonCode = ReasonCode.NO_PERMISSION;
-                return buildResultAndLog(request, decision, reasonCode, employeeId, "无访问权限");
+                AccessResult result = new AccessResult(AccessDecision.DENY, ReasonCode.NO_PERMISSION, "没有访问该资源的权限");
+                recordLog(badge, employee, resource, result, request);
+                return result;
             }
 
-            // 8. 所有检查通过，允许访问
-            decision = AccessDecision.ALLOW;
-            reasonCode = ReasonCode.ALLOW;
-            return buildResultAndLog(request, decision, reasonCode, employeeId, "访问允许");
+            // 7. 验证资源状态
+            if (resource.getResourceState() == ResourceState.LOCKED) {
+                AccessResult result = new AccessResult(AccessDecision.DENY, ReasonCode.RESOURCE_LOCKED, "资源已被锁定");
+                recordLog(badge, employee, resource, result, request);
+                return result;
+            }
+            if (resource.getResourceState() == ResourceState.OCCUPIED) {
+                AccessResult result = new AccessResult(AccessDecision.DENY, ReasonCode.RESOURCE_OCCUPIED, "资源当前被占用");
+                recordLog(badge, employee, resource, result, request);
+                return result;
+            }
+
+            // 8. 所有验证通过，允许访问
+            AccessResult result = new AccessResult(AccessDecision.ALLOW, ReasonCode.ALLOW, "允许访问");
+            recordLog(badge, employee, resource, result, request);
+            return result;
 
         } catch (Exception e) {
-            // 捕获所有未预期异常，转化为系统错误
-            reasonCode = ReasonCode.SYSTEM_ERROR;
-            return buildResultAndLog(request, decision, reasonCode, employeeId, "系统内部错误：" + e.getMessage());
+            // 处理系统异常
+            AccessResult result = new AccessResult(AccessDecision.DENY, ReasonCode.SYSTEM_ERROR, "系统内部错误");
+            recordLog(null, null, null, result, request);
+            return result;
         }
     }
 
@@ -158,26 +128,16 @@ public class AccessControlServiceImpl implements AccessControlService {
         return CompletableFuture.completedFuture(processAccess(request));
     }
 
-    /**
-     * 构建访问结果并记录日志
-     */
-    private AccessResult buildResultAndLog(AccessRequest request,
-                                           AccessDecision decision,
-                                           ReasonCode reasonCode,
-                                           String employeeId,
-                                           String message) {
-        // 记录日志
+    // 记录访问日志
+    private void recordLog(Badge badge, Employee employee, Resource resource, AccessResult result, AccessRequest request) {
         LogEntry logEntry = new LogEntry(
-                request.getTimestamp(),
-                request.getBadgeId(),
-                employeeId,
-                request.getResourceId(),
-                decision,
-                reasonCode
+                LocalDateTime.ofInstant(request.getTimestamp(), ZoneId.systemDefault()),
+                badge,
+                employee,
+                resource,
+                result.getDecision(),
+                result.getReasonCode()
         );
         logService.record(logEntry);
-
-        // 返回访问结果
-        return new AccessResult(decision, reasonCode, message);
     }
 }
