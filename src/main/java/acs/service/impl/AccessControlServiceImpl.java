@@ -116,18 +116,6 @@ public class AccessControlServiceImpl implements AccessControlService {
         }
     }
 
-    /**
-     * 异步入口：用于并发模拟/多线程访问。
-     *
-     * 注意：这里不要直接在同一个类里用内部方法自调用 @Async 方法，否则 Spring 代理不会生效。
-     * 只要 UI/Controller/测试通过 Spring 容器注入的 bean 调用本方法即可触发异步执行。
-     */
-    @Override
-    @Async("acsExecutor")
-    public CompletableFuture<AccessResult> processAccessAsync(AccessRequest request) {
-        return CompletableFuture.completedFuture(processAccess(request));
-    }
-
     // 记录访问日志
     private void recordLog(Badge badge, Employee employee, Resource resource, AccessResult result, AccessRequest request) {
         LogEntry logEntry = new LogEntry(
