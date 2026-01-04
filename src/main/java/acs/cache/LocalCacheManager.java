@@ -12,6 +12,7 @@ import acs.repository.ResourceRepository;
 import acs.repository.AccessLogRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.time.LocalDateTime;
@@ -129,21 +130,25 @@ public class LocalCacheManager {
     // 更新缓存中的徽章
     public void updateBadge(Badge badge) {
         badgeCache.put(badge.getBadgeId(), badge);
+        badgeRepository.save(badge);
     }
 
     // 更新缓存中的员工
     public void updateEmployee(Employee employee) {
         employeeCache.put(employee.getEmployeeId(), employee);
+        employeeRepository.save(employee);
     }
 
     // 更新缓存中的组
     public void updateGroup(Group group) {
         groupCache.put(group.getGroupId(), group);
+        groupRepository.save(group);
     }
 
     // 更新缓存中的资源
     public void updateResource(Resource resource) {
         resourceCache.put(resource.getResourceId(), resource);
+        resourceRepository.save(resource);
     }
 
     // 更新日志缓存（新增或修改日志后重新排序）
@@ -153,41 +158,55 @@ public class LocalCacheManager {
         // 添加新记录并重新排序
         logCache.add(log);
         logCache.sort(Comparator.comparing(LogEntry::getTimestamp));  // 保持有序
+        //同步到数据库
+        accessLogRepository.save(log);
     }
 
     // 从缓存中删除徽章
     public void removeBadge(String badgeId) {
         badgeCache.remove(badgeId);
+        badgeRepository.deleteById(badgeId);
     }
 
     // 从缓存中删除员工
     public void removeEmployee(String employeeId) {
         employeeCache.remove(employeeId);
+        employeeRepository.deleteById(employeeId);
     }
 
     // 从缓存中删除组
     public void removeGroup(String groupId) {
         groupCache.remove(groupId);
+        groupRepository.deleteById(groupId);
     }
 
     // 从缓存中删除资源
     public void removeResource(String resourceId) {
         resourceCache.remove(resourceId);
+        resourceRepository.deleteById(resourceId);
     }
 
     // 从缓存中删除日志
     public void removeLog(Long logId) {
         logCache.removeIf(log -> log.getId().equals(logId));
+        accessLogRepository.deleteById(logId);
     }
 
+    @Transactional 
     // 清理缓存中过期的日志（7天前）
     public int clearExpiredLogs(LocalDateTime sevenDaysAgo) {
         // 记录清理前的数量
         int initialSize = logCache.size();
         // 删除所有时间在7天前的日志
         logCache.removeIf(log -> log.getTimestamp().isBefore(sevenDaysAgo));
-        // 返回删除的数量
-        return initialSize - logCache.size();
+        // 删除的数量
+        int cacheDeletedCount = initialSize - logCache.size();
+
+        // 同步清理数据库中的过期日志
+        accessLogRepository.deleteByTimestampBefore(sevenDaysAgo);
+
+        // 返回实际从缓存中删除的数量
+        return cacheDeletedCount;
     }
 
     // 强制刷新所有缓存（从数据库重新加载）

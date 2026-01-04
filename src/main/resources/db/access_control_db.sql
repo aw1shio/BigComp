@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS group_permissions (
 CREATE TABLE IF NOT EXISTS resources (
     resource_id VARCHAR(50) NOT NULL PRIMARY KEY,
     resource_name VARCHAR(100) NOT NULL,
-    resource_type ENUM('DOOR', 'PRINTER', 'COMPUTER', 'ROOM', 'OTHER') NOT NULL,
-    resource_state ENUM('AVAILABLE', 'OCCUPIED', 'LOCKED', 'OFFLINE') NOT NULL
+    resource_type ENUM('PENDING','DOOR', 'PRINTER', 'COMPUTER', 'ROOM', 'OTHER') NOT NULL,
+    resource_state ENUM('PENDING','AVAILABLE', 'OCCUPIED', 'LOCKED', 'OFFLINE') NOT NULL
 );
 
 -- 3. 先创建 employees 表（无外键，后续追加 badge_id 外键）
@@ -61,8 +61,9 @@ CREATE TABLE IF NOT EXISTS access_logs (
     badge_id VARCHAR(50),
     employee_id VARCHAR(50),
     resource_id VARCHAR(50),
-    decision ENUM('ALLOW', 'DENY') NOT NULL,
+    decision ENUM('PENDING', 'ALLOW', 'DENY') NOT NULL,
     reason_code ENUM(
+        'PENDING',
         'ALLOW', 
         'BADGE_NOT_FOUND', 
         'BADGE_INACTIVE', 

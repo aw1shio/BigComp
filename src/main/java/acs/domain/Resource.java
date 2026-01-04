@@ -36,7 +36,10 @@ public class Resource {
     private Set<Group> groups = new HashSet<>();
 
     // 无参构造器（JPA必需）
-    public Resource() {}
+    public Resource() {
+        this.resourceState = ResourceState.PENDING; //设置默认值
+        this.resourceType = ResourceType.PENDING;
+    }
 
     // 全参构造器
     public Resource(String resourceId, String resourceName, ResourceType resourceType, ResourceState resourceState) {

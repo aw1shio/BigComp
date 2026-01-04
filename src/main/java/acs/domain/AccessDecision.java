@@ -5,6 +5,9 @@ package acs.domain;
  */
 public enum AccessDecision {
 
+    /** 初始化非空类型 */
+    PENDING,
+
     /** 允许访问 */
     ALLOW,
 

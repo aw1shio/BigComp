@@ -8,6 +8,8 @@ access-control-system
    │  ├─ java
    │  │  └─ acs
    │  │     ├─ AccessControlApplication.java
+   │  │     ├─ cache
+   │  │     │  └─ LocalCacheManager.java
    │  │     ├─ domain
    │  │     │  ├─ AccessDecision.java
    │  │     │  ├─ AccessRequest.java
@@ -22,6 +24,8 @@ access-control-system
    │  │     │  ├─ ResourceState.java
    │  │     │  └─ ResourceType.java
    │  │     ├─ log
+   │  │     │  ├─ impl
+   │  │     │  │  └─ LogServiceImpl.java
    │  │     │  └─ LogService.java
    │  │     ├─ repository
    │  │     │  ├─ AccessLogRepository.java
@@ -29,24 +33,36 @@ access-control-system
    │  │     │  ├─ EmployeeRepository.java
    │  │     │  ├─ GroupRepository.java
    │  │     │  └─ ResourceRepository.java
-   │  │     └─ service
-   │  │        ├─ AccessControlService.java
-   │  │        ├─ AdminService.java
-   │  │        ├─ impl
-   │  │        │  └─ AdminServiceImpl.java
-   │  │        └─ LogQueryService.java
+   │  │     ├─ service
+   │  │     │  ├─ AccessControlService.java
+   │  │     │  ├─ AdminService.java
+   │  │     │  ├─ impl
+   │  │     │  │  ├─ AccessControlServiceImpl.java
+   │  │     │  │  ├─ AdminServiceImpl.java
+   │  │     │  │  └─ LogQueryServiceImpl.java
+   │  │     │  ├─ LogCleanupService.java
+   │  │     │  └─ LogQueryService.java
+   │  │     └─ ui
+   │  │        ├─ AdminPanel.java
+   │  │        ├─ hello.java
+   │  │        ├─ MainApp.java
+   │  │        └─ ScanPanel.java
    │  └─ resources
    │     ├─ application.properties
    │     └─ db
-   │        └─ bigcomp_db.sql
+   │        └─ access_control_db.sql
    └─ test
       ├─ java
       │  └─ acs
+      │     ├─ cache
+      │     │  └─ LocalCacheManagerIntegrationTest.java
       │     └─ service
-      │        ├─ AccessControlServiceTest.java
-      │        └─ DatabaseIntegrationTest.java
+      │        └─ impl
+      │           ├─ AccessControlServiceImplTest.java
+      │           ├─ AdminServiceImplTest.java
+      │           └─ LogQueryServiceImplTest.java
       └─ resources
-         ├─ application.properties
+         ├─ application-test.properties
          └─ db
             └─ init-test-data.sql
 

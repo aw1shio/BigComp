@@ -43,7 +43,10 @@ public class LogEntry {
     private ReasonCode reasonCode;
 
     // 无参构造器（JPA必需）
-    public LogEntry() {}
+    public LogEntry() {
+        this.decision = AccessDecision.PENDING;
+        this.reasonCode = ReasonCode.PENDING;
+    }
 
     // 全参构造器
     public LogEntry(LocalDateTime timestamp, Badge badge, Employee employee, Resource resource, AccessDecision decision, ReasonCode reasonCode) {

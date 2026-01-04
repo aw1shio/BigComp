@@ -5,6 +5,9 @@ package acs.domain;
  */
 public enum ResourceState {
 
+    /** 初始化时的非空默认值 */
+    PENDING,
+
     /** 可被访问 */
     AVAILABLE,
 

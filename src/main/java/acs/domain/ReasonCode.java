@@ -9,6 +9,9 @@ package acs.domain;
  */
 public enum ReasonCode {
 
+    /** 初始化非空类型 */
+    PENDING,
+
     /** 访问成功 */
     ALLOW,
 
